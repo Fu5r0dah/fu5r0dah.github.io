@@ -19,22 +19,45 @@
         <meta name="keywords" content="hexo,hexo-theme,hexo-blog">
     
     <meta name="description" content="">
-    <meta name="description" content="Hi大家好，这里是Fu5r0dah,做个2021年的个人总结。总结会写的很杂，大概率没啥逻辑，本来就是写给自己看的。 这个ID是新的，说下ID的来历，我特别喜欢玩《上古卷轴5》，而这个ID就来自《上古卷轴5》里DragonBorn所使用的龙吼–不卸之力。更多情况下我是个沉默寡言的人，不自觉的思考，剖析问题，典型的INFJ人。因此我藉此ID，希望自己可以多点发言，或者说发言可以更加有分量。用之前ID">
+    <meta name="description" content="0x01 前言放假那天和学弟闲聊，偶然聊到了某次应急。场景如下： 态感设备侦测到内网中某终端出现异常 ICMP 流量，怀疑该终端已沦陷。该终端使用Windows系统，承载了关键业务系统，无法进行断网操作，需要尽快定位进程。     本文不涉及对 ICMP 流量的分析，对流量分析有意向的师傅可移步到 RJ45mp 师傅的文章。 12内网代理和穿透工具的分析记录-RJ45mphttps:&#x2F;&#x2F;rj45m">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Fu5r0dah的2021年度总结">
-<meta property="og:url" content="https://fu5r0dah.github.io/2022/01/07/Summary-of-2021/index.html">
+<meta property="og:title" content="找到发出异常ICMP流量的进程">
+<meta property="og:url" content="https://fu5r0dah.github.io/2024/02/21/Find-the-process-which-sent-the-Suspicious-ICMP-traffic/index.html">
 <meta property="og:site_name" content="Fu5r0dah&#39;s Blog">
-<meta property="og:description" content="Hi大家好，这里是Fu5r0dah,做个2021年的个人总结。总结会写的很杂，大概率没啥逻辑，本来就是写给自己看的。 这个ID是新的，说下ID的来历，我特别喜欢玩《上古卷轴5》，而这个ID就来自《上古卷轴5》里DragonBorn所使用的龙吼–不卸之力。更多情况下我是个沉默寡言的人，不自觉的思考，剖析问题，典型的INFJ人。因此我藉此ID，希望自己可以多点发言，或者说发言可以更加有分量。用之前ID">
+<meta property="og:description" content="0x01 前言放假那天和学弟闲聊，偶然聊到了某次应急。场景如下： 态感设备侦测到内网中某终端出现异常 ICMP 流量，怀疑该终端已沦陷。该终端使用Windows系统，承载了关键业务系统，无法进行断网操作，需要尽快定位进程。     本文不涉及对 ICMP 流量的分析，对流量分析有意向的师傅可移步到 RJ45mp 师傅的文章。 12内网代理和穿透工具的分析记录-RJ45mphttps:&#x2F;&#x2F;rj45m">
 <meta property="og:locale" content="zh_CN">
-<meta property="article:published_time" content="2022-01-07T08:20:37.000Z">
-<meta property="article:modified_time" content="2022-01-07T08:45:36.000Z">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Fu5r0dah/Project_imgs//imgs/e2837711-8f54-433a-931a-e23c5f14e5e6.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Fu5r0dah/Project_imgs//imgs/6a59d222-e6a0-46bf-bfd3-5da77f3de26f.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Fu5r0dah/Project_imgs//imgs/caa9aa46-b96e-45f7-b8f4-6d58121dc439.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Fu5r0dah/Project_imgs//imgs/cd71a3ed-ba4a-4b64-bdb7-0a56059413eb.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Fu5r0dah/Project_imgs/imgs/c83b4cca-8b4e-458b-82af-f5158b3a983a.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Fu5r0dah/Project_imgs/imgs/32ecd4b1-18c4-4ee5-afa8-a721b5c95cba.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Fu5r0dah/Project_imgs/imgs/ffba850b-320a-4cb9-b95b-66e32b3d5bd8.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Fu5r0dah/Project_imgs/imgs/097b8115-6553-497d-926f-d361c0ffcf4f.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Fu5r0dah/Project_imgs/imgs/345963a0-5c3d-453b-bef4-ffeb9b4039b0.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Fu5r0dah/Project_imgs/imgs/401a0d96-9241-4628-b112-c595a87f06d9.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Fu5r0dah/Project_imgs/imgs/726186d5-cc52-4c9e-9604-0ac8b8296685.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Fu5r0dah/Project_imgs/imgs/a7329573-39a9-4daf-91ea-949643041bad.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Fu5r0dah/Project_imgs/imgs/7737639c-210d-4054-b43b-582bc348ea1f.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Fu5r0dah/Project_imgs/imgs/6c7cb317-5fab-4729-8a3e-f025bff9e017.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Fu5r0dah/Project_imgs/imgs/7e8ddc49-c23e-49b9-8496-d1f356e5fa09.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Fu5r0dah/Project_imgs/imgs/a21ab87a-ade9-43b7-89af-89d820ef62fe.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Fu5r0dah/Project_imgs/imgs/1d4d23c6-3652-480f-aac3-7ca2566fe65e.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Fu5r0dah/Project_imgs/imgs/73757e3b-5c3b-421f-bb55-918778970f2c.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Fu5r0dah/Project_imgs/imgs/a46ac105-52f0-4ab7-ac80-2b3b11d6bcb6.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Fu5r0dah/Project_imgs/imgs/0bda4c08-220f-4479-8014-91623c53f64b.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Fu5r0dah/Project_imgs/imgs/38669be4-05b2-4b90-a23e-68e32d05ec19.png">
+<meta property="article:published_time" content="2024-02-20T20:36:04.000Z">
+<meta property="article:modified_time" content="2024-02-20T20:50:07.920Z">
 <meta property="article:author" content="Fu5r0dah">
+<meta property="article:tag" content="BlueTeam">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/Fu5r0dah/Project_imgs//imgs/e2837711-8f54-433a-931a-e23c5f14e5e6.png">
     <meta http-equiv="Cache-control" content="no-cache">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <link rel="icon" href="/assets/favicon.ico">
     
-    <title>Fu5r0dah的2021年度总结 · Fu5r0dah&#39;s Blog</title>
+    <title>找到发出异常ICMP流量的进程 · Fu5r0dah&#39;s Blog</title>
     <!-- /*! loadCSS. [c]2017 Filament Group, Inc. MIT License */
 /* This file is meant as a standalone workflow for
 - testing support for link[rel=preload]
@@ -260,7 +283,7 @@
                 <a href="/">Fu5r0dah&#39;s Blog</a>
             </div>
             <div class="post-title header-element">
-                <a href="#" class="post-name">Fu5r0dah的2021年度总结</a>
+                <a href="#" class="post-name">找到发出异常ICMP流量的进程</a>
             </div>
         </div>
     
@@ -306,7 +329,7 @@
         <h1 class="intro-title">
             <!-- 主页  -->
             
-                Fu5r0dah的2021年度总结
+                找到发出异常ICMP流量的进程
             <!-- 404 -->
             
         </h1>
@@ -326,19 +349,21 @@
                     <div class= post-intro-tags >
     
     
+        <a class="post-tag" href="javascript:void(0);" data-tags="BlueTeam">BlueTeam</a>
+    
 </div>
 
                 
                 <!-- 文章字数统计 -->
                 
                     <div class="post-intro-read">
-                        <span>字数统计: <span class="post-count word-count">1.1k</span>阅读时长: <span class="post-count reading-time">3 min</span></span>
+                        <span>字数统计: <span class="post-count word-count">1.3k</span>阅读时长: <span class="post-count reading-time">5 min</span></span>
                     </div>
                 
                 <div class="post-intro-meta">
                     <!-- 撰写日期 -->
                     <span class="iconfont-archer post-intro-calander">&#xe676;</span>
-                    <span class="post-intro-time">2022/01/07</span>
+                    <span class="post-intro-time">2024/02/21</span>
                     <!-- busuanzi -->
                     
                         <span id="busuanzi_container_page_pv" class="busuanzi-pv">
@@ -493,24 +518,107 @@
             <div class="container container-unloaded">
                 <main class="main post-page">
     <article class="article-entry">
-        <p>Hi大家好，这里是Fu5r0dah,做个2021年的个人总结。<br>总结会写的很杂，大概率没啥逻辑，本来就是写给自己看的。</p>
-<p>这个ID是新的，说下ID的来历，我特别喜欢玩《上古卷轴5》，而这个ID就来自《上古卷轴5》里DragonBorn所使用的龙吼–<em>不卸之力</em>。更多情况下我是个沉默寡言的人，不自觉的思考，剖析问题，典型的INFJ人。因此我藉此ID，希望自己可以多点发言，或者说<del>发言可以更加有分量</del>。用之前ID写的博客文章都已经删除（因为之前的安全法，大家懂的），所以这个博客肯定是空空如也的。</p>
-<p>从三个方面来总结吧，先说工作。</p>
-<h3 id="工作"><a href="#工作" class="headerlink" title="工作"></a>工作</h3><p>目前就职于某合规公司，工作就是渗透，闲着没事干就审计一下代码，目前正在稳步成长中。在刚入行的时候，我对自己的职位“渗透测试工程师”是没有任何职业认同感的。做的工作让我完全不认为自己是一名“渗透测试工程师”，当然了主要还是因为我太菜了，还有我的性格原因。<br>非常感谢我接触过的所有同事（在职&amp;已离职），感谢他们对我的包容，我从他们的身上学到了很多，到现在我还经常和同事说“做渗透一定要细心”，这句话是我从已离职的同事（ZF）那听回来的，大概这也是一种传承吧。<br>红队HVV的感觉就是，花里胡哨没啥用，要么0day要么钓鱼；蓝队HVV要研判攻击是否成功，分析攻击路径还是很有意思的。</p>
-<h3 id="生活"><a href="#生活" class="headerlink" title="生活"></a>生活</h3><p>生活还是一如既往的稳定，工作日两点一线，周末要么就躺在床上睡大觉，要么就是和好友出去吃饭。有一位同事和我说过：“我觉得你没有兴趣爱好”，那一刹那我特别想反驳他，但我没有，事实就是我为了工作把兴趣爱好全丢了。我以前对电脑硬件特别感兴趣，可以说是痴迷的程度。自打工作以后就很少再踫电脑硬件了，恰好在两个月前我电脑坏了，重新买了硬件进行组装。装电脑很简单，但是对超频进行优化很难，我花了一周时间一直在对电脑的超频进行优化。突然发现，我找回了对电脑硬件的热爱，又开始了对超频细节的研究，感觉自己生活稍微充实了那么一点。把吃灰的相机又拿了出来街拍（满大街瞎拍），发现生活中美好的东西；玩起了Switch；开始接触黑胶；系统性的学习俄语；把之前落下的日语再捡回来；原来生活也可以这么有趣。</p>
-<h3 id="个人"><a href="#个人" class="headerlink" title="个人"></a>个人</h3><p>朋友曾经和我说：“你可以不要天天为别人着想吗，你可以为你自己着想吗”。<br>我没有回他，我想他已经知道我的沉默就是答案。<br>不要整天看我嘻嘻哈哈的，实际上我特别自卑。譬如人家是XX名牌大学毕业的，人家是XX博士，人家今天又审计出来特别厉害的漏洞。我就感觉全世界除了我都在进步，哪怕我学到凌晨3、4点都不能追上人家的脚步，连个屁都闻不到。<br>我摆烂过一段时间，摆烂是真挺爽的，但是我脑子里总会有两个“我”在争吵。一个“我”会让我接着摆烂，另一个“我”不让我摆烂，挺折磨人的。<br>我的心路历程就和真嗣一样，《EVA》结局了，真嗣补完了，但我还没结局，我还需要继续我的补完之路。</p>
-<p>感谢我所有的朋友，你们真的很优秀，能认识你们是我的荣幸。</p>
-<p>是啊，人家太优秀了，我也不能落后啊。</p>
-<p>“Keep walking”，送给我，也送给看完我这篇1100字流水账的你，与君共勉。</p>
+        <h1 id="0x01-前言"><a href="#0x01-前言" class="headerlink" title="0x01 前言"></a>0x01 前言</h1><p>放假那天和学弟闲聊，偶然聊到了某次应急。场景如下：</p>
+<p>态感设备侦测到内网中某终端出现异常 ICMP 流量，怀疑该终端已沦陷。该终端使用Windows系统，承载了关键业务系统，无法进行断网操作，需要尽快定位进程。</p>
+<img src="https://cdn.jsdelivr.net/gh/Fu5r0dah/Project_imgs//imgs/e2837711-8f54-433a-931a-e23c5f14e5e6.png" alt="image-e2837711-8f54-433a-931a-e23c5f14e5e6" style="zoom:90%;" />
+
+
+
+<p>本文不涉及对 ICMP 流量的分析，对流量分析有意向的师傅可移步到 RJ45mp 师傅的文章。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">内网代理和穿透工具的分析记录-RJ45mp</span><br><span class="line">https://rj45mp.github.io/%E5%86%85%E7%BD%91%E4%BB%A3%E7%90%86%E5%92%8C%E7%A9%BF%E9%80%8F%E5%B7%A5%E5%85%B7%E7%9A%84%E5%88%86%E6%9E%90%E8%AE%B0%E5%BD%95/</span><br></pre></td></tr></table></figure>
+
+<h1 id="0x02-Windows-Microsoft-Message-Analyzer"><a href="#0x02-Windows-Microsoft-Message-Analyzer" class="headerlink" title="0x02 Windows - Microsoft Message Analyzer"></a>0x02 Windows - Microsoft Message Analyzer</h1><h2 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h2><p>Microsoft Message Analyzer（MMA）是微软推出的一款用于捕获、显示和分析网络协议数据的软件。说白了，功能上和 WireShark 差不多，甚至不如 WireShark，所以微软很识相的在2016年之后，再也没给 MMA 更新过了……</p>
+<img src="https://cdn.jsdelivr.net/gh/Fu5r0dah/Project_imgs//imgs/6a59d222-e6a0-46bf-bfd3-5da77f3de26f.png" alt="image-6a59d222-e6a0-46bf-bfd3-5da77f3de26f" style="zoom:90%;" />
+
+
+
+<h2 id="下载"><a href="#下载" class="headerlink" title="下载"></a>下载</h2><p>由于微软已经在官网上下架了该款软件，所以我们只能在网上别的地方下载 MMA ，所幸的是 Github 上有人建立了存档，链接放在下面，自行下载就好。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">https://github.com/riverar/messageanalyzer-archive</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="实验环境"><a href="#实验环境" class="headerlink" title="实验环境"></a>实验环境</h2><ul>
+<li>攻击机 - CentOS7 - 192.168.0.9</li>
+<li>受害机 - WinSer2012r2 - 192.168.0.8</li>
+<li>工具：icmpsh、MMA</li>
+</ul>
+<h2 id="过程"><a href="#过程" class="headerlink" title="过程"></a>过程</h2><p>1.攻击机关闭 ICMP 应答，开始监听</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">sysctl -w net.ipv4.icmp_echo_ignore_all=1</span><br><span class="line"></span><br><span class="line">###还原设置</span><br><span class="line">sysctl -w net.ipv4.icmp_echo_ignore_all=0</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/Fu5r0dah/Project_imgs//imgs/caa9aa46-b96e-45f7-b8f4-6d58121dc439.png" alt="caa9aa46-b96e-45f7-b8f4-6d58121dc439"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/Fu5r0dah/Project_imgs//imgs/cd71a3ed-ba4a-4b64-bdb7-0a56059413eb.png" alt="cd71a3ed-ba4a-4b64-bdb7-0a56059413eb"></p>
+<p>2.受害机启动 MMA 并监听本地网络接口</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Fu5r0dah/Project_imgs/imgs/c83b4cca-8b4e-458b-82af-f5158b3a983a.png" alt="c83b4cca-8b4e-458b-82af-f5158b3a983a"></p>
+<p>3.受害机 MMA 添加进程列，设置过滤规则</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Fu5r0dah/Project_imgs/imgs/32ecd4b1-18c4-4ee5-afa8-a721b5c95cba.png" alt="32ecd4b1-18c4-4ee5-afa8-a721b5c95cba"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/Fu5r0dah/Project_imgs/imgs/ffba850b-320a-4cb9-b95b-66e32b3d5bd8.png" alt="ffba850b-320a-4cb9-b95b-66e32b3d5bd8"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/Fu5r0dah/Project_imgs/imgs/097b8115-6553-497d-926f-d361c0ffcf4f.png" alt="097b8115-6553-497d-926f-d361c0ffcf4f"></p>
+<p>这里为了快速查找数据包，笔者还添加了“ReqData”列</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Fu5r0dah/Project_imgs/imgs/345963a0-5c3d-453b-bef4-ffeb9b4039b0.png" alt="345963a0-5c3d-453b-bef4-ffeb9b4039b0"></p>
+<p>4.受害机成功回弹shell</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Fu5r0dah/Project_imgs/imgs/401a0d96-9241-4628-b112-c595a87f06d9.png" alt="401a0d96-9241-4628-b112-c595a87f06d9"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/Fu5r0dah/Project_imgs/imgs/726186d5-cc52-4c9e-9604-0ac8b8296685.png" alt="726186d5-cc52-4c9e-9604-0ac8b8296685"></p>
+<p>5.MMA 查看消息</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Fu5r0dah/Project_imgs/imgs/a7329573-39a9-4daf-91ea-949643041bad.png" alt="a7329573-39a9-4daf-91ea-949643041bad"></p>
+<p>可以看到，MMA 可以快速定位发出异常 ICMP 流量的进程，查看发送出的数据。更重要的是，MMA 还可以通过远程登录到别的计算机上进行远程抓取，非常方便。</p>
+<h1 id="0x03-Windows-ALPCLogger"><a href="#0x03-Windows-ALPCLogger" class="headerlink" title="0x03 Windows - ALPCLogger"></a>0x03 Windows - ALPCLogger</h1><h2 id="介绍-1"><a href="#介绍-1" class="headerlink" title="介绍"></a>介绍</h2><p>在查找相关资料的过程中，找到了绿盟投稿的<a target="_blank" rel="noopener" href="https://www.anquanke.com/post/id/281835">《如何找到发送异常ICMP流量的进程？》</a>，文中提到在 Windows 下 ICMP 请求都是托管给系统进程 svchost 的。以下引用原文</p>
+<blockquote>
+<p>既然是进程托管，就一定会涉及到进程间通信，而Windows下进程通信又以本地调用机制为主。我们可以利用调用捕获工具，配合wireshark等抓包工具，得到ICMP流量与进程的对应关系。<br>Windows本地调用（LPC，Local Procedure Call）简单介绍，通常也被称为轻量过程调用或者本地进程间通信，是一种由Windows NT内核提供的内部进程间通信方式。通过这一方式，同一计算机上的进程可以进行轻量的通信。在Windows Vista中及以后，ALPC（Advanced Local Procedure Call，高级本地进程通信）替代了LPC。ALPC十分复杂，还被非常多的应用所使用，如RPC、WMI、COM组件、打印机等。即使最简单的windows程序都会有ALPC连接。可以用ProcessExplorer查看每个进程的ALPC Port的名字。</p>
+</blockquote>
+<p>那我们就可以使用本地调用监控工具 ALPCLogger 对本地调用进行监控。</p>
+<h2 id="下载-1"><a href="#下载-1" class="headerlink" title="下载"></a>下载</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">https://github.com/zodiacon/ALPCLogger</span><br></pre></td></tr></table></figure>
+
+<p>当然，这个软件上来就给我了我一个下马威……笔者极其讨厌安装 dotNet 的依赖。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Fu5r0dah/Project_imgs/imgs/7737639c-210d-4054-b43b-582bc348ea1f.png" alt="7737639c-210d-4054-b43b-582bc348ea1f"></p>
+<h2 id="实验环境-1"><a href="#实验环境-1" class="headerlink" title="实验环境"></a>实验环境</h2><ul>
+<li>攻击机 - CentOS7 - 192.168.0.9</li>
+<li>受害机 - WinSer2012r2 - 192.168.0.8</li>
+<li>工具：icmpsh、ALPCLogger、WireShark、Process Monitor</li>
+</ul>
+<h2 id="过程-1"><a href="#过程-1" class="headerlink" title="过程"></a>过程</h2><p>1.在 icmpsh 执行命令前，先打开 ALPCLogger、WireShark 以及 Process Monitor。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Fu5r0dah/Project_imgs/imgs/6c7cb317-5fab-4729-8a3e-f025bff9e017.png" alt="6c7cb317-5fab-4729-8a3e-f025bff9e017"></p>
+<p>2.在 WireShark 抓取流量并选取其中一个数据包，这里笔者选取 No.23661 数据包</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Fu5r0dah/Project_imgs/imgs/7e8ddc49-c23e-49b9-8496-d1f356e5fa09.png" alt="7e8ddc49-c23e-49b9-8496-d1f356e5fa09"></p>
+<p>3.查看数据包详情，并记录下包时间（红框处）</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Fu5r0dah/Project_imgs/imgs/a21ab87a-ade9-43b7-89af-89d820ef62fe.png" alt="a21ab87a-ade9-43b7-89af-89d820ef62fe"></p>
+<p>4.回到 ALPCLogger 匹配对应的时间点附近，找到给“svchost”发消息的进程，确认该进程 ID 为 3032。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Fu5r0dah/Project_imgs/imgs/1d4d23c6-3652-480f-aac3-7ca2566fe65e.png" alt="1d4d23c6-3652-480f-aac3-7ca2566fe65e"></p>
+<p>5.使用 Process Monitor 过滤出进程号为 3032 的进程。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Fu5r0dah/Project_imgs/imgs/73757e3b-5c3b-421f-bb55-918778970f2c.png" alt="73757e3b-5c3b-421f-bb55-918778970f2c"></p>
+<p>6.跟踪其行为可发现，该进程调用了 nsi 以及 iphlpapi.dll 的 IcmpCreateFile 函数</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Fu5r0dah/Project_imgs/imgs/a46ac105-52f0-4ab7-ac80-2b3b11d6bcb6.png" alt="a46ac105-52f0-4ab7-ac80-2b3b11d6bcb6.png"></p>
+<p>至于 IcmpCreateFile 函数是用来干嘛的，微软已经说的很明白了。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Fu5r0dah/Project_imgs/imgs/0bda4c08-220f-4479-8014-91623c53f64b.png" alt="0bda4c08-220f-4479-8014-91623c53f64b"></p>
+<h1 id="0x04-Linux-Systemtap"><a href="#0x04-Linux-Systemtap" class="headerlink" title="0x04 Linux - Systemtap"></a>0x04 Linux - Systemtap</h1><h2 id="介绍-2"><a href="#介绍-2" class="headerlink" title="介绍"></a>介绍</h2><p>继续引用绿盟投稿的<a target="_blank" rel="noopener" href="https://www.anquanke.com/post/id/281835">《如何找到发送异常ICMP流量的进程？》</a>一文。</p>
+<blockquote>
+<p>由于Linux下不存在Windows那种托管机制，ICMP流量由本进程驱动发送，所以捕获起来更加容易且可信度高。<br>在Linux下实时捕获ICMP流量我们要用到基于Kprobe的内核调用调试机制。</p>
+</blockquote>
+<h2 id="下载-2"><a href="#下载-2" class="headerlink" title="下载"></a>下载</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">wget http://debuginfo.centos.org/$(cat /etc/redhat-release|cut -c 22)/$(uname -p)/kernel-debuginfo-common-$(uname -p)-$(uname -r).rpm</span><br><span class="line">wget http://debuginfo.centos.org/$(cat /etc/redhat-release|cut -c 22)/$(uname -p)/kernel-debuginfo-$(uname -r).rpm</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">rpm -ivh kernel-debuginfo-common-$(uname -p)-$(uname -r).rpm</span><br><span class="line">rpm -ivh kernel-debuginfo-$(uname -r).rpm</span><br><span class="line"></span><br><span class="line">yum install &quot;kernel-devel-$(uname -r)&quot;</span><br><span class="line">yum install -y systemtap systemtap-runtime</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="实验环境-2"><a href="#实验环境-2" class="headerlink" title="实验环境"></a>实验环境</h2><ul>
+<li>攻击机 - CentOS7 - 192.168.0.9</li>
+<li>受害机 - CentOS7 - 2 - 192.168.0.10</li>
+<li>工具：icmpsh、systemtap</li>
+</ul>
+<h2 id="过程-2"><a href="#过程-2" class="headerlink" title="过程"></a>过程</h2><ol>
+<li><p>写入脚本内容</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#! /usr/bin/env stap</span></span><br><span class="line">probe netfilter.ip.local_out &#123;</span><br><span class="line">    <span class="keyword">if</span> (0 == dport)</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;%s[PID:%d,TID:%d] sent %d to %s:%d\n&quot;</span>, execname(), pid(),  tid(),length, daddr, dport)</span><br><span class="line">&#125;</span><br><span class="line">probe netfilter.ip.local_in &#123;</span><br><span class="line">    <span class="keyword">if</span> (0 == sport)</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;%s recv %d from %s:%d\n&quot;</span>, execname(),length, saddr, sport)</span><br><span class="line">&#125;	</span><br></pre></td></tr></table></figure></li>
+<li><p>执行脚本查看效果</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">stap -i ./icmp.sh </span><br><span class="line">run</span><br></pre></td></tr></table></figure>
+
+<img src="https://cdn.jsdelivr.net/gh/Fu5r0dah/Project_imgs/imgs/38669be4-05b2-4b90-a23e-68e32d05ec19.png" alt="38669be4-05b2-4b90-a23e-68e32d05ec19" style="zoom:90%;" /></li>
+</ol>
 
     </article>
     <!-- license -->
     
         <div class="license-wrapper">
             <p>原文作者：<a href="https://fu5r0dah.github.io">Fu5r0dah</a>
-            <p>原文链接：<a href="https://fu5r0dah.github.io/2022/01/07/Summary-of-2021/">https://fu5r0dah.github.io/2022/01/07/Summary-of-2021/</a>
-            <p>发表日期：<a href="https://fu5r0dah.github.io/2022/01/07/Summary-of-2021/">January 7th 2022, 4:20:37 pm</a>
-            <p>更新日期：<a href="https://fu5r0dah.github.io/2022/01/07/Summary-of-2021/">January 7th 2022, 4:45:36 pm</a>
+            <p>原文链接：<a href="https://fu5r0dah.github.io/2024/02/21/Find-the-process-which-sent-the-Suspicious-ICMP-traffic/">https://fu5r0dah.github.io/2024/02/21/Find-the-process-which-sent-the-Suspicious-ICMP-traffic/</a>
+            <p>发表日期：<a href="https://fu5r0dah.github.io/2024/02/21/Find-the-process-which-sent-the-Suspicious-ICMP-traffic/">February 21st 2024, 4:36:04 am</a>
+            <p>更新日期：<a href="https://fu5r0dah.github.io/2024/02/21/Find-the-process-which-sent-the-Suspicious-ICMP-traffic/">February 21st 2024, 4:50:07 am</a>
             <p>版权声明：本文采用<a rel="license noopener" target="_blank" href="http://creativecommons.org/licenses/by-nc/4.0/">知识共享署名-非商业性使用 4.0 国际许可协议</a>进行许可</p>
         </div>
     
@@ -518,13 +626,13 @@
     <ul class="post-paginator">
         <li class="next">
             
-                <div class="nextSlogan">Next Post</div>
-                <a href="/2023/02/20/Summary-of-2022/" title="Fu5r0dah的2022年度总结">
-                    <div class="nextTitle">Fu5r0dah的2022年度总结</div>
-                </a>
-            
         </li>
         <li class="previous">
+            
+                <div class="prevSlogan">Previous Post</div>
+                <a href="/2024/02/09/Summary-of-2023/" title="Fu5r0dah的2023年度总结">
+                    <div class="prevTitle">Fu5r0dah的2023年度总结</div>
+                </a>
             
         </li>
     </ul>
@@ -648,7 +756,7 @@
                 <div class="toc-catalog">
                     <span class="iconfont-archer catalog-icon">&#xe613;</span><span>CATALOG</span>
                 </div>
-                <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B7%A5%E4%BD%9C"><span class="toc-number">1.</span> <span class="toc-text">工作</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%94%9F%E6%B4%BB"><span class="toc-number">2.</span> <span class="toc-text">生活</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%AA%E4%BA%BA"><span class="toc-number">3.</span> <span class="toc-text">个人</span></a></li></ol>
+                <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#0x01-%E5%89%8D%E8%A8%80"><span class="toc-number">1.</span> <span class="toc-text">0x01 前言</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#0x02-Windows-Microsoft-Message-Analyzer"><span class="toc-number">2.</span> <span class="toc-text">0x02 Windows - Microsoft Message Analyzer</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BB%8B%E7%BB%8D"><span class="toc-number">2.1.</span> <span class="toc-text">介绍</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%8B%E8%BD%BD"><span class="toc-number">2.2.</span> <span class="toc-text">下载</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C%E7%8E%AF%E5%A2%83"><span class="toc-number">2.3.</span> <span class="toc-text">实验环境</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%BF%87%E7%A8%8B"><span class="toc-number">2.4.</span> <span class="toc-text">过程</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#0x03-Windows-ALPCLogger"><span class="toc-number">3.</span> <span class="toc-text">0x03 Windows - ALPCLogger</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BB%8B%E7%BB%8D-1"><span class="toc-number">3.1.</span> <span class="toc-text">介绍</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%8B%E8%BD%BD-1"><span class="toc-number">3.2.</span> <span class="toc-text">下载</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C%E7%8E%AF%E5%A2%83-1"><span class="toc-number">3.3.</span> <span class="toc-text">实验环境</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%BF%87%E7%A8%8B-1"><span class="toc-number">3.4.</span> <span class="toc-text">过程</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#0x04-Linux-Systemtap"><span class="toc-number">4.</span> <span class="toc-text">0x04 Linux - Systemtap</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BB%8B%E7%BB%8D-2"><span class="toc-number">4.1.</span> <span class="toc-text">介绍</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%8B%E8%BD%BD-2"><span class="toc-number">4.2.</span> <span class="toc-text">下载</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C%E7%8E%AF%E5%A2%83-2"><span class="toc-number">4.3.</span> <span class="toc-text">实验环境</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%BF%87%E7%A8%8B-2"><span class="toc-number">4.4.</span> <span class="toc-text">过程</span></a></li></ol></li></ol>
             </div>
         
         <!-- sidebar -->
